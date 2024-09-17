@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-  namespace = "com.openclassrooms.hexagonal.games"
+  namespace = "com.rolandl.poc.navigation"
   compileSdk = 34
 
   defaultConfig {
-    applicationId = "com.openclassrooms.hexagonal.games"
+    applicationId = "fr.rolandl.poc"
     minSdk = 24
     targetSdk = 34
     versionCode = 1

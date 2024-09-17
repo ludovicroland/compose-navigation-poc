@@ -19,5 +19,5 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Hexagonal Games"
+rootProject.name = "POC Navigation"
 include(":app")
