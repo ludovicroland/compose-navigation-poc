@@ -33,7 +33,8 @@ import com.rolandl.poc.navigation.ui.theme.POCNavigationTheme
 fun LoginScreen(
   modifier: Modifier = Modifier,
   viewModel: LoginViewModel = hiltViewModel(),
-  onBackClick: () -> Unit
+  onBackClick: () -> Unit,
+  onNotificationDisabledClicked: () -> Unit
 ) {
   println("NAVIGATION - LoginScreen")
 
@@ -59,7 +60,10 @@ fun LoginScreen(
   ) { contentPadding ->
     Settings(
       modifier = Modifier.padding(contentPadding),
-      onNotificationDisabledClicked = { viewModel.disableNotifications() },
+      onNotificationDisabledClicked = {
+        LoginHelper.markAsLogged()
+        onNotificationDisabledClicked()
+      },
       onNotificationEnabledClicked = {
         viewModel.enableNotifications()
       }

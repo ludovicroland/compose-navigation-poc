@@ -3,6 +3,7 @@ package com.rolandl.poc.navigation.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -25,51 +26,29 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+  private val viewModel: MainActivityViewModel by viewModels()
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     setContent {
       val navController = rememberNavController().apply {
         addOnDestinationChangedListener { _, destination, _ ->
-          println("NAVIGATION - addOnDestinationChangedListener: ${destination.route}")
-
-          println("NAVIGATION - checking for splashscreen init")
-
-          if(SplashHelper.isInitialized() == false && destination.route != Screen.Splash.route)
-          {
-            println("NAVIGATION - Splashscreen not initialized, navigating to splashscreen")
-
-            navigate(Screen.Splash.route) {
-              popUpTo(destination.route!!) {
-                inclusive = true
+          viewModel.needsRedirection(destination)?.let {
+            navigate(it.route) {
+              popUpTo(it.popUpTo) {
+                inclusive = it.inclusive
               }
             }
           }
-          else {
-            println("NAVIGATION - splashscreen already initialized")
-
-            println("NAVIGATION - checking for log on the AddRoute")
-
-            if(LoginHelper.isLogged() == false && destination.route == Screen.Add.route)
-            {
-              println("NAVIGATION - Login not done, navigating to login")
-
-              navigate(Screen.Login.route) {
-                popUpTo(destination.route!!) {
-                  inclusive = true
-                }
-              }
-            }
-            else {
-              println("NAVIGATION - Login done or not needed")
-            }
-          }
-
         }
       }
 
       POCNavigationTheme {
-        HexagonalGamesNavHost(navHostController = navController)
+        HexagonalGamesNavHost(
+          navHostController = navController,
+          viewModel = viewModel
+        )
       }
     }
   }
@@ -77,7 +56,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun HexagonalGamesNavHost(navHostController: NavHostController) {
+fun HexagonalGamesNavHost(navHostController: NavHostController, viewModel: MainActivityViewModel) {
   NavHost(
     navController = navHostController,
     startDestination = Screen.Home.route
@@ -85,7 +64,7 @@ fun HexagonalGamesNavHost(navHostController: NavHostController) {
     composable(route = Screen.Splash.route) {
       SplashScreen(
         onInit = {
-          navHostController.navigate(Screen.Home.route) {
+          navHostController.navigate(viewModel.getCallingRoute() ?: Screen.Home.route) {
             popUpTo(Screen.Splash.route) {
               inclusive = true
             }
@@ -108,7 +87,18 @@ fun HexagonalGamesNavHost(navHostController: NavHostController) {
     }
     composable(route = Screen.Login.route) {
       LoginScreen(
-        onBackClick = { navHostController.navigateUp() }
+        onBackClick = { navHostController.navigateUp() },
+        onNotificationDisabledClicked = {
+          val navigateTo = viewModel.getCallingRoute()
+
+          println("NAVIGATION - After login, navigate to $navigateTo")
+
+          navHostController.navigate(navigateTo ?: Screen.Home.route) {
+            popUpTo(Screen.Login.route) {
+              inclusive = true
+            }
+          }
+        }
       )
     }
   }
